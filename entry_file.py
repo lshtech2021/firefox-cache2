@@ -7,13 +7,17 @@ import gzip
 from constants import META_HEADER_SIZE, kMinMetadataRead, kChunkSize, \
 	kMaxElementsSize, kAlignSize
 
+"""
+Refs:
+https://searchfox.org/mozilla-central/source/netwerk/cache2/CacheFile.cpp
 
+"""
 class MetaDataHeader:
 	version: int
 	fetch_count: int
 	last_fetched: int
 	last_modified: int
-	frequency: int
+	frecency: int
 	expire_time: int
 	key_size: int
 	flags: int
@@ -33,9 +37,11 @@ class EntryFile:
 
 	def parse_entry_file(self, file_path):
 		self.entry_file = Path(file_path).name
-
 		with open(file_path, 'rb') as fd:
 			data = fd.read()
+		self.parse_entry(data)
+
+	def parse_entry(self, data):
 		size = len(data)
 		offset = 0
 		if size < kMinMetadataRead:
@@ -126,21 +132,15 @@ class EntryFile:
 		i = 0
 		pos = 0
 		while pos < size:
-			chunk_buf = data_buf[pos:pos+kChunkSize]
+			chunk_size = min(kChunkSize, size - pos)
+			chunk_buf = data_buf[pos:pos+chunk_size]
 			pos += kChunkSize
 			i += 1
-			try:
-				plain_buf = gzip.decompress(chunk_buf)
-				self.chunks.append(plain_buf)
-			except Exception as e:
-				print(e)
-				self.dump_error_chunk(chunk_buf, 'chunk'+str(i))
+			if chunk_buf[0:2] == b'\x1F\x8B':
+				try:
+					plain_buf = gzip.decompress(chunk_buf)
+					self.chunks.append(plain_buf)
+				except Exception as e:
+					print(e)
+			else:
 				self.chunks.append(chunk_buf)
-
-	def dump_error_chunk(self, buf, chunk_name):
-		error_logs = Path('logs').joinpath(self.entry_file)
-		if not error_logs.exists():
-			os.makedirs(error_logs)
-		error_file = error_logs.joinpath(chunk_name)
-		with open(error_file, 'wb') as fd:
-			fd.write(buf)
