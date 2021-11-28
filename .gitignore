@@ -1,0 +1,6 @@
+logs
+.bak
+__pycache__
+.pyc
+.pyd
+
