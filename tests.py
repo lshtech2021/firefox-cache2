@@ -29,7 +29,16 @@ def test4(cache_path):
 			entry_file.parse_entry_file(file)
 			print('key', entry_file.key)
 			print('hash_codes', entry_file.hash_codes)
-			print('elements', entry_file.elements)
+			# print('elements', entry_file.elements)
+			elem_count = len(entry_file.elements)
+			if elem_count > 0:
+				count = int(elem_count/2)
+				k = 0
+				for i in range(count):
+					print('element key', entry_file.elements[k])
+					k += 2
+			for chunk in entry_file.chunks:
+				print('chunk', len(chunk))
 
 def dump_chunk(self, buf, folder, chunk_name):
 	logs_folder = Path('logs').joinpath(folder).joinpath(self.entry_file)
