@@ -3,4 +3,4 @@ logs
 __pycache__
 .pyc
 .pyd
-
+.bat
